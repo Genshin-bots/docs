@@ -29,7 +29,7 @@ const config = {
   // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'zh-Hans',
-    locales: ['zh-Hans', 'en'],
+    locales: ['zh-Hans'],
   },
 
   presets: [
@@ -74,9 +74,9 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
-            label: 'Tutorial',
+            label: '快速开始',
           },
-          {to: '/blog', label: 'Blog', position: 'left'},
+          {to: '/blog', label: '博客', position: 'left'},
           {
             href: 'https://github.com/facebook/docusaurus',
             label: 'GitHub',
@@ -88,40 +88,53 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: '文档',
             items: [
               {
-                label: 'Tutorial',
+                label: '⏱️ 快速开始',
                 to: '/docs/intro',
               },
             ],
           },
           {
-            title: 'Community',
+            title: '社区',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+                label: '🐧 QQ',
+                href: 'https://jq.qq.com/?_wv=1027&k=hWgLn3Tt',
               },
               {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
+                label: '📃 博客',
+                to: '/blog',
               },
             ],
           },
           {
-            title: 'More',
+            title: 'Bot',
             items: [
               {
-                label: 'Blog',
-                to: '/blog',
+                label: '🫧 GenshinUID',
+                href: 'https://docs.gsuid.gbots.work',
               },
               {
-                label: 'GitHub',
+                label: '👾 GenshinImpactBot',
+                href: 'https://github.com/H-K-Y/Genshin_Impact_bot',
+              },
+              {
+                label: '🔮 GenshinUID-PHP',
+                href: 'https://github.com/MiniGrayGay/MiniGG-Bot',
+              },
+            ],
+          },
+          {
+            title: '更多',
+            items: [
+              {
+                label: '🐺 MiniGG',
+                href: 'https://minigg.cn',
+              },
+              {
+                label: '🐱 GitHub',
                 href: 'https://github.com/facebook/docusaurus',
               },
             ],
