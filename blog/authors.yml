@@ -1,17 +1,23 @@
-endi:
-  name: Endilie Yacop Sucipto
-  title: Maintainer of Docusaurus
-  url: https://github.com/endiliey
-  image_url: https://github.com/endiliey.png
+hky:
+  name: H-K-Y
+  title: Author of Genshin Impact Bot
+  url: https://github.com/H-K-Y
+  image_url: https://github.com/H-K-Y.png
 
-yangshun:
-  name: Yangshun Tay
-  title: Front End Engineer @ Facebook
-  url: https://github.com/yangshun
-  image_url: https://github.com/yangshun.png
+minigg:
+  name: 小灰灰
+  title: Author of GenshinUID-PHP, Maintainer of minigg APIs
+  url: https://github.com/MiniGrayGay
+  image_url: https://github.com/MiniGrayGay.png
 
-slorber:
-  name: Sébastien Lorber
-  title: Docusaurus maintainer
-  url: https://sebastienlorber.com
-  image_url: https://github.com/slorber.png
+wansn:
+  name: Wansn
+  title: Maintainer of Genshin ImpactBot
+  url: https://github.com/Wansn-w
+  image_url: https://github.com/Wansn-w.png
+
+wuyi:
+  name: Wuyi无疑
+  title: Author of GenshinUID
+  url: https://github.com/KimigaiiWuyi
+  image_url: https://github.com/KimigaiiWuyi.png
