@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
   pages: write
-  id-token: write.
+  id-token: write
 
 concurrency:
   group: "pages"
@@ -26,6 +26,7 @@ jobs:
         uses: actions/setup-node@v3.6.0
       - name: Build with Docusaurus
         run: |
+          npm install
           npm run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
