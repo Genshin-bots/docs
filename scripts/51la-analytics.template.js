@@ -10,16 +10,8 @@ async function umamiAnalyticsTemplate(context, options) {
                             async: true,
                             defer: true,
                             id: "LA_COLLECT",
-                            src: "//sdk.51.la/js-sdk-pro.min.js",
+                            src: "//sdk.51.la/js-sdk-pro.min.js?id=LA51_TRACE_ID&ck=LA51_TRACE_CK",
                         },
-                    },
-                    {
-                        tagName: 'script',
-                        attributes: {
-                            async: true,
-                            type: 'text/javascript'
-                        },
-                        innerHTML: "LA.init({id:\"LA51_TRACE_ID\",ck:\"LA51_TRACE_CK\",autoTrack:true,hashMode:true})"
                     },
                 ]
             };
