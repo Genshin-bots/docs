@@ -27,14 +27,6 @@ jobs:
         uses: actions/setup-node@v3.6.0
       - name: Install modules
         run: yarn
-      - name: Configure secrets
-        run: |
-          echo "${{ env.SECRETS }}" | jq -r '
-            . as $secrets |
-            keys[] as $key |
-            env[$key] = ($secrets[$key] | tostring)'
-        env:
-          SECRETS: ${{ toJSON(secrets) }}
       - name: Build with Docusaurus
         run: bash scripts/build.sh
       - name: Upload artifact
