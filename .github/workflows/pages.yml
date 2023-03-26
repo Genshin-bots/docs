@@ -24,10 +24,10 @@ jobs:
         uses: actions/configure-pages@v3
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.6.0
+      - name: Install modules
+        run: yarn
       - name: Build with Docusaurus
-        run: |
-          npm install
-          npm run build
+        run: bash scripts/build.sh
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:

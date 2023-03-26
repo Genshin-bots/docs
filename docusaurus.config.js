@@ -147,6 +147,7 @@ const config = {
         darkTheme: darkCodeTheme,
       },
     }),
+  plugins: [],
 };
 
 module.exports = config;
