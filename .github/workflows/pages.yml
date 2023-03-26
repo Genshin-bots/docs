@@ -27,6 +27,10 @@ jobs:
         uses: actions/setup-node@v3.6.0
       - name: Install modules
         run: yarn
+      - name: Configure secrets
+        uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
       - name: Build with Docusaurus
         run: bash scripts/build.sh
       - name: Upload artifact
