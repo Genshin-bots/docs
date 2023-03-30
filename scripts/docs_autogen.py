@@ -59,7 +59,7 @@ def type2string(__tp) -> str:
     elif getattr(__tp, "__module__", None) == "builtins":
         return __tp.__qualname__
     else:
-        return f"{__tp.__module__}.{__tp.__qualname__}"
+        return str(__tp)
 
 
 def get_fixed_table(*line) -> List[tuple]:
@@ -69,11 +69,12 @@ def get_fixed_table(*line) -> List[tuple]:
 
 def format_params(params_source_line: str, padding=4) -> str:
     split_source_line = re.split('\((.*)\)', params_source_line)
+    print(split_source_line)
     PADDING = ' ' * padding
     formatted_args = '\n'.join(f'{PADDING}{_.strip()},' for _ in split_source_line[1].split(','))
     return '\n'.join([
-        '```python', f'{split_source_line[0]}(', f'{formatted_args}\n)',
-        *split_source_line[2:], '```'
+        '```python', f'{split_source_line[0]}(', f'{formatted_args}\n):',
+        *filter(lambda x: x!= ':', split_source_line[2:]), f'{PADDING}...','```'
     ])
 
 
@@ -90,11 +91,13 @@ def gen_table(*line: tuple) -> str:
 
 
 def get_desc_path(function_: Any, *additional) -> str:
+    qualname = function_.__qualname__ if '__init__' not in function_.__qualname__ else ''.join(
+        filter(lambda x: x != '__init__', function_.__qualname__.split('.'))
+    )
     if hasattr(function_, 'fget'):
         _callable_path = Path(inspect.getsourcefile(function_.fget)).as_posix()
     else:
         _callable_path = Path(inspect.getsourcefile(function_)).as_posix()
-
     if 'site-packages' in _callable_path:
         _relative_path = '@' + _callable_path[_callable_path.find('site-packages') + 14:]
     else:
@@ -102,12 +105,15 @@ def get_desc_path(function_: Any, *additional) -> str:
             _relative_path = Path(_callable_path).relative_to(FILE_PATH).as_posix()
         else:
             if hasattr(function_, 'fget'):
-                return '.'.join([function_.fget.__qualname__, *additional])
+                return '.'.join([inspect.getmodule(function_).__name__, qualname, *additional])
             elif hasattr(function_, '__qualname__'):
-                return '.'.join([function_.__qualname__, *additional])
+                return '.'.join([inspect.getmodule(function_).__name__, qualname, *additional])
             else:
-                return '.'.join([function_.__name__, *additional])
-    return '.'.join([*_relative_path.split('/'), *additional])
+                return '.'.join([inspect.getmodule(function_).__name__, qualname, *additional])
+    return '.'.join([
+        *[_[:-3] if _.endswith('.py') else _ for _ in _relative_path.split('/')],
+        qualname, *additional
+    ])
 
 
 def get_table(__fm: Callable, is_method=False) -> Union[List[Tuple[str]], None]:
@@ -141,7 +147,7 @@ def get_table(__fm: Callable, is_method=False) -> Union[List[Tuple[str]], None]:
                 repr(_arg_default_value) if _arg_default_value else ''
             )
         _table_row.append(
-            DESC.get(get_desc_path(__fm))
+            DESC.get(get_desc_path(__fm, _))
         )
         _raw_table.append(tuple(_table_row))
     return _raw_table
@@ -166,9 +172,9 @@ def gen_method_md(method: Any) -> Union[str, None]:
         content = [f'### `{async_state}{_method_type}` {method.__name__}']
         raw_table = get_table(method, is_method=True)
         if raw_table:
-            source_arg = inspect.getsource(method).split('\n')[0].strip() + ' ...'
+            source_arg = inspect.getsource(method).split('\n')[0].strip()
             content.extend([
-                f'`{source_arg}`' if len(source_arg) < 80 else format_params(source_arg),
+                f'`{source_arg} ...`' if len(source_arg) < 80 else format_params(source_arg),
                 gen_table(*[TABLE_HEADER[:len(raw_table[0])], *raw_table])
             ])
     desc_path = get_desc_path(method, '@description')
@@ -222,26 +228,52 @@ def gen_function_md(function: Any) -> str:
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
-    import sys
+    from pathlib import Path
+    import importlib
+    import pkgutil
+
+    skip_modules = []
+    FILE_PATH = Path(__file__).parent
 
     parser = ArgumentParser()
-    parser.add_argument('module', action='store')
-    parser.add_argument('--search-path', '-S', action='store')
+    parser.add_argument('module', action='store', help='Name of the module')
+    parser.add_argument('--search-path', '-S', action='store', help='Add a search path.')
+    parser.add_argument('--skip', '-s', action='append', help='Specify which module will be skipped.')
+    parser.add_argument('--dir', '-d', action='store', help='Specify the directory to store documents.')
 
     argv = parser.parse_args()
     if argv.search_path:
-        sys.path.append(argv.search_path)
-    module = __import__(argv.module)
+        pkgutil.extend_path([argv.search_path], argv.module)
+    if argv.skip:
+        for s in argv.skip:
+            if ',' in s:
+                skip_modules.extend(_.strip() for _ in s.split(','))
+            else:
+                skip_modules.append(s)
+    module = importlib.import_module(argv.module)
+    module_docs_path = FILE_PATH / module.__name__ if not argv.dir else Path(argv.dir)
+    if not module_docs_path.exists():
+        module_docs_path.mkdir(parents=True)
 
     md_docs = []
-    for name, member in get_members(module):
-        if inspect.isclass(member):
-            md_docs.append(gen_class_md(member))
-        elif inspect.isfunction(member):
-            md_docs.append(gen_function_md(member))
-        else:
-            md_docs.append(
-                f'### `instance` {name}\n\n' + DESC.get(get_desc_path(member, '@description'))
-            )
-    with open(f'{module.__name__}.md', 'w+', encoding='utf-8') as f:
-        f.write('\n\n'.join(md_docs))
+    for import_path, module_name, is_package in pkgutil.walk_packages(module.__path__):
+        if module_name in skip_modules:
+            continue
+        try:
+            _sub_module = importlib.import_module(f'{module.__name__}.{module_name}')
+        except ModuleNotFoundError as e:
+            print(e.name, str(e))
+        for name, member in get_members(module):
+            try:
+                if inspect.isclass(member):
+                    md_docs.append(gen_class_md(member))
+                elif inspect.isfunction(member):
+                    md_docs.append(gen_function_md(member))
+                else:
+                    md_docs.append(
+                        f'### `instance` {name}\n\n' + DESC.get(get_desc_path(member, '@description'))
+                    )
+            except (TypeError, AttributeError):
+                pass
+        with open(module_docs_path / f'{module_name}.md', 'w+', encoding='utf-8') as f:
+            f.write('\n\n'.join(md_docs))
