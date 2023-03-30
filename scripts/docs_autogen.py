@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import re
 import inspect
 from pathlib import Path
@@ -41,7 +43,7 @@ class DescManager(UserDict):
         self.load()
 
 
-DESC = DescManager('./doc.description')
+DESC = DescManager('./doc.description.properties')
 
 
 def get_members(obj) -> list:
@@ -56,10 +58,14 @@ def type2string(__tp) -> str:
     if getattr(__tp, "__args__", None):
         args = ", ".join(type2string(arg) for arg in __tp.__args__)
         return f"{__tp.__name__}[{args}]"
-    elif getattr(__tp, "__module__", None) == "builtins":
-        return __tp.__qualname__
-    else:
-        return str(__tp)
+    if isinstance(__tp, (tuple, set)):
+        args = ", ".join(__tp)
+        return f"Union[{args}]"
+    if getattr(__tp, "__module__", None) == "builtins":
+        return __tp.__name__
+    if inspect.isclass(__tp):
+        return __tp.__name__
+    return repr(__tp)
 
 
 def get_fixed_table(*line) -> List[tuple]:
@@ -231,19 +237,23 @@ if __name__ == '__main__':
     from pathlib import Path
     import importlib
     import pkgutil
+    import sys
 
     skip_modules = []
     FILE_PATH = Path(__file__).parent
+    WORK_PATH = Path('.')
+    SEARCH_PATH = [FILE_PATH.absolute(), WORK_PATH.absolute()]
 
     parser = ArgumentParser()
     parser.add_argument('module', action='store', help='Name of the module')
-    parser.add_argument('--search-path', '-S', action='store', help='Add a search path.')
+    parser.add_argument('--search-paths', '-S', action='append', help='Add a search path.')
     parser.add_argument('--skip', '-s', action='append', help='Specify which module will be skipped.')
     parser.add_argument('--dir', '-d', action='store', help='Specify the directory to store documents.')
 
     argv = parser.parse_args()
-    if argv.search_path:
-        pkgutil.extend_path([argv.search_path], argv.module)
+    if argv.search_paths:
+        SEARCH_PATH.extend(Path(_).absolute() for _ in argv.search_paths)
+    sys.path.extend(str(_) for _ in SEARCH_PATH)
     if argv.skip:
         for s in argv.skip:
             if ',' in s:
@@ -251,7 +261,7 @@ if __name__ == '__main__':
             else:
                 skip_modules.append(s)
     module = importlib.import_module(argv.module)
-    module_docs_path = FILE_PATH / module.__name__ if not argv.dir else Path(argv.dir)
+    module_docs_path = WORK_PATH / 'docs_output' / module.__name__ if not argv.dir else Path(argv.dir)
     if not module_docs_path.exists():
         module_docs_path.mkdir(parents=True)
 
@@ -263,7 +273,8 @@ if __name__ == '__main__':
             _sub_module = importlib.import_module(f'{module.__name__}.{module_name}')
         except ModuleNotFoundError as e:
             print(e.name, str(e))
-        for name, member in get_members(module):
+            continue
+        for name, member in get_members(_sub_module):
             try:
                 if inspect.isclass(member):
                     md_docs.append(gen_class_md(member))
