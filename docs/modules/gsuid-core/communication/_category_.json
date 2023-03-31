@@ -1,0 +1,7 @@
+{
+    "label": "通信参考",
+    "position": 98,
+    "link": {
+        "description": "与 gsuid-core 的通信细节"
+    }
+}
